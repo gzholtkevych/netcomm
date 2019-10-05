@@ -2,6 +2,16 @@ import numpy as np
 import numpy.random as rnd
 
 
+DISCLAIMER = -1
+rg = np.random.default_rng()
+
+
+def actor_roles(
+    channel  # graph edge
+):
+    return min(channel), max(channel)
+
+
 def Bernoulli_trial(p):
     return rnd.choice([True, False], p=[p, 1- p])
 
@@ -47,3 +57,38 @@ def input_non_empty(prompt):
             return temp
         else:
             print("Error!", end=' ')
+
+
+def decorator_for_specifying_community_graph(
+    specifying_function
+):
+    def wrapped_function(nvars):
+        # create net
+        net = specifying_function()
+        # associte 'nvars' with 'net'
+        setattr(net, 'nvars', nvars)
+        return net
+    return wrapped_function
+
+
+def decorator_for_assigning_actors_parameter_values(
+    assigning_function
+):
+    def wrapped_function(net):
+        for n in net:
+            net.nodes[n]['choice'] = DISCLAIMER
+            net.nodes[n]['rho'] = 1.0
+        assigning_function(net)
+    return wrapped_function
+
+
+def decorator_for_assigning_channels_parameter_values(
+    assigning_function
+):
+    def wrapped_function(net):
+        for channel in net.edges:
+            net.edges[channel]['a'] = 1.0
+            net.edges[channel]['D'] = \
+                define_dialogue_matrix(0.5, 0.5)
+        assigning_function(net)
+    return wrapped_function
