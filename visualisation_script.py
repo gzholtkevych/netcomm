@@ -4,11 +4,11 @@ from cycler import cycler
 from utils import *
 
 
-color_c = cycler('color', ['k'])
-style_c = cycler('linestyle', ['-', '--', ':', '-.'])
-markr_c = cycler('marker', ['', '.', 'o'])
-c_cms = color_c * markr_c * style_c
-c_csm = color_c * style_c * markr_c
+# color_c = cycler('color', ['k'])
+# style_c = cycler('linestyle', ['-', '--', ':', '-.'])
+# markr_c = cycler('marker', ['', '.', 'o'])
+# c_cms = color_c * markr_c * style_c
+# c_csm = color_c * style_c * markr_c
 
 
 # ----------------------------------------------------------
@@ -61,7 +61,7 @@ else:
                 "variant refers to a non-existent data")
             pass
         else:
-            plt.rc('axes', prop_cycle=c_cms)
+            plt.rc('axes')  #, prop_cycle=c_cms)
             fig = plt.figure(figsize=(5, 3))
             ax = fig.add_subplot(111)
             ax.set(xlim=(0, npoints), ylim=(-0.02, 1.02))

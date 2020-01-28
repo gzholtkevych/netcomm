@@ -68,6 +68,9 @@ def decorate_specifying_community_graph(
         net = specifying_function()
         # associte 'nvars' with 'net'
         setattr(net, 'nvars', nvars)
+        setattr(net, 'W', None)
+        setattr(net, 'DP', None)
+        setattr(net, 'WP', None)
         return net
     return wrapped_function
 
@@ -116,7 +119,7 @@ def simulate_dialog(
         np.zeros(net.nvars), np.zeros(net.nvars)
     for v in range(net.nvars):
         wAlice_after[v], wBob_after[v] = \
-            D[0, 0] * wAlice[v] + D[0, 1] * wBob[v],
+            D[0, 0] * wAlice[v] + D[0, 1] * wBob[v], \
             D[1, 0] * wAlice[v] + D[1, 1] * wBob[v]
     return wAlice_after, wBob_after
 
@@ -152,7 +155,8 @@ def simulate_session(
 
 
 def observation(
-    net  # a network community
+    net,
+    specific_observation_function
 ):  # returns community preference density,
     #         disclaimer probability, and
     #         estimated community preference density
@@ -167,25 +171,28 @@ def observation(
             net.nodes[n]['choice'] = \
                 np.random.choice(
                     net.nvars, p=net.nodes[n]['w']
-                )
+            )
     # compute community preference density
-    W = np.zeros(net.nvars)
+    net.W = np.zeros(net.nvars)
     for n in net:
-        np.add(W, net.nodes[n]['w'], W)
-    np.multiply(W, 1.0 / net.number_of_nodes(), W)
+        np.add(net.W, net.nodes[n]['w'], net.W)
+    np.multiply(net.W, 1.0 / net.number_of_nodes(), net.W)
     # compute polling result
     DN = len([1 for n in net  # number of disclaiming nodes
                 if net.nodes[n]['choice'] == DISCLAIMER])
     if DN == net.number_of_nodes():
     # all community actors disclaimed a choice 
-        return W, 1.0, uncertainty(net.nvars)
-    NP = net.number_of_nodes() - DN
-    WP = net.nvars * [None]
-    for v in range(net.nvars):
-        WP[v] = len([1 for n in net
-                       if net.nodes[n]['choice'] == v])
-        WP[v] /= NP
-    return W, DN / net.number_of_nodes(), WP
+        net.DP = 1.0
+        net.WP = uncertainty(net.nvars)
+    else:
+        net.DP = DN / net.number_of_nodes()
+        NP = net.number_of_nodes() - DN
+        net.WP = net.nvars * [None]
+        for v in range(net.nvars):
+            net.WP[v] = len([1 for n in net
+                               if net.nodes[n]['choice'] == v])
+            net.WP[v] /= NP
+    return specific_observation_function(net)
 
 
 def decorate_specifying_initial_prefernce_densities(
